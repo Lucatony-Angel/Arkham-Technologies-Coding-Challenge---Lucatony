@@ -213,3 +213,7 @@ __marimo__/
 
 # Project data (regenerated via ingestion script)
 data/
+
+# Frontend dependencies
+frontend/node_modules/
+frontend/dist/
