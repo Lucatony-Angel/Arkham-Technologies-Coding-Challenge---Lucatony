@@ -27,7 +27,7 @@ export default function App() {
         date_to: dateTo || undefined,
       });
       setRows(result.data);
-      setTotal(result.count);
+      setTotal(result.total);
       setOffset(newOffset);
     } catch (e) {
       setError(e.message);
@@ -126,7 +126,7 @@ export default function App() {
               Previous
             </button>
             <span>Showing {offset + 1}–{offset + rows.length}</span>
-            <button onClick={() => load(offset + PAGE_SIZE)} disabled={rows.length < PAGE_SIZE || loading}>
+            <button onClick={() => load(offset + PAGE_SIZE)} disabled={offset + rows.length >= total || loading}>
               Next
             </button>
           </div>

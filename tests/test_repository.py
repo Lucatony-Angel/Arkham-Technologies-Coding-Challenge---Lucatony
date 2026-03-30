@@ -23,7 +23,7 @@ def test_offset():
          patch("pandas.read_parquet", mock_read_parquet):
         mock_path.exists.return_value = True
         result = get_outages(limit=10, offset=2)
-        assert len(result) == 1
+        assert len(result["rows"]) == 1
 
 
 def test_date_from():
@@ -33,10 +33,10 @@ def test_date_from():
         result = get_outages(date_from="2025-12-01")
         periods = []
 
-        for r in result:
+        for r in result["rows"]:
             periods.append(r["period"])
 
-        for p in  periods:
+        for p in periods:
             assert p >= "2025-12-01"
 
 def test_date_to():
@@ -46,14 +46,15 @@ def test_date_to():
         result = get_outages(date_to="2025-11-30")
         periods = []
 
-        for r in result:
+        for r in result["rows"]:
             periods.append(r["period"])
 
-        for p in  periods:
+        for p in periods:
             assert p <= "2025-11-30"
 
 def test_missing_parquet_returns_empty():
     with patch("backend.app.repository.FACT_OUTAGES_PATH") as mock_path:
         mock_path.exists.return_value = False
         result = get_outages()
-        assert result == []
+        assert result["rows"] == []
+        assert result["total"] == 0

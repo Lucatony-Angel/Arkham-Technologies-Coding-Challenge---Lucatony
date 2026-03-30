@@ -1,5 +1,8 @@
+import pytest
 import pandas as pd
-from backend.app.services.ingestion import clean_rows, build_dim_date
+from unittest.mock import patch
+from backend.app.services.eia_client import EIAClient
+from backend.app.services.ingestion import clean_rows, build_dim_date, fetch_all_rows
 
 def test_valid_row_passes_through():
     rows = [{"period": "2025-06-15", "capacity": "100000", "outage": "3000", "percentOutage": "3.0"}]
@@ -52,3 +55,21 @@ def test_row_count_matches():
     ])
     result = build_dim_date(fact_df)
     assert len(result) == len(fact_df)
+
+
+# --- fetch_all_rows error paths ---
+
+def test_fetch_raises_on_auth_failure():
+    with patch.object(EIAClient, "fetch_page", side_effect=RuntimeError("Authentication failed. Check EIA API key.")):
+        with pytest.raises(RuntimeError, match="Authentication failed"):
+            fetch_all_rows()
+
+def test_fetch_raises_on_timeout():
+    with patch.object(EIAClient, "fetch_page", side_effect=RuntimeError("Request to EIA API timed out after retries")):
+        with pytest.raises(RuntimeError, match="timed out"):
+            fetch_all_rows()
+
+def test_fetch_raises_on_malformed_response():
+    with patch.object(EIAClient, "fetch_page", side_effect=RuntimeError("Malformed API response")):
+        with pytest.raises(RuntimeError, match="Malformed"):
+            fetch_all_rows()

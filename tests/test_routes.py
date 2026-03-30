@@ -59,6 +59,16 @@ def test_refresh_returns_400_without_api_key():
         response = client.post("/refresh")
         assert response.status_code == 400
 
+def test_refresh_returns_502_on_network_error():
+    with patch("backend.app.api.routes.run_ingestion", side_effect=RuntimeError("Could not connect to EIA API after retries")):
+        response = client.post("/refresh")
+        assert response.status_code == 502
+
+def test_refresh_returns_500_on_unexpected_error():
+    with patch("backend.app.api.routes.run_ingestion", side_effect=Exception("unexpected")):
+        response = client.post("/refresh")
+        assert response.status_code == 500
+
 def test_refresh_returns_result_on_success():
     mock_result = {
         "run_id": "abc-123",

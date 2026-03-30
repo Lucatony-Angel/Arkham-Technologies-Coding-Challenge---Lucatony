@@ -11,8 +11,8 @@ def data(
     date_from: str | None = Query(None),
     date_to: str | None = Query(None),
 ):
-    rows = get_outages(limit=limit, offset=offset, date_from=date_from, date_to=date_to)
-    return {"data": rows, "count": len(rows), "offset": offset}
+    result = get_outages(limit=limit, offset=offset, date_from=date_from, date_to=date_to)
+    return {"data": result["rows"], "count": len(result["rows"]), "total": result["total"], "offset": offset}
 
 @router.post("/refresh")
 def refresh():

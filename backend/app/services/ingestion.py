@@ -156,20 +156,25 @@ def run_ingestion() -> dict[str, Any]:
 
     if FACT_OUTAGES_PATH.exists():
         existing = pd.read_parquet(FACT_OUTAGES_PATH)
+        rows_before = len(existing)
         fact_df = pd.concat([existing, fact_df]).drop_duplicates(subset="period")
+    else:
+        rows_before = 0
 
     if DIM_DATE_PATH.exists():
         existing = pd.read_parquet(DIM_DATE_PATH)
         dim_date_df = pd.concat([existing, dim_date_df]).drop_duplicates(subset="period")
 
+    new_row_count = len(fact_df) - rows_before
+
     fact_df.to_parquet(FACT_OUTAGES_PATH, index=False)
     dim_date_df.to_parquet(DIM_DATE_PATH, index=False)
-    run_id = append_ingestion_log(len(rows))
-    logger.info("Ingestion complete — %d rows written, run_id=%s", len(rows), run_id)
+    run_id = append_ingestion_log(new_row_count)
+    logger.info("Ingestion complete — %d new rows persisted, run_id=%s", new_row_count, run_id)
 
     return {
         "run_id": run_id,
-        "row_count": len(rows),
+        "row_count": new_row_count,
         "fact_outages": str(FACT_OUTAGES_PATH),
         "dim_date": str(DIM_DATE_PATH),
         "ingestion_log": str(INGESTION_LOG_PATH),
