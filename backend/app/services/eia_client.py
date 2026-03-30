@@ -40,7 +40,7 @@ class EIAClient:
         ]
 
         if start_date:
-            params.append(("filter[period][gte]", start_date))
+            params.append(("start", start_date))
 
         for attempt in range(MAX_RETRIES):
             try:
