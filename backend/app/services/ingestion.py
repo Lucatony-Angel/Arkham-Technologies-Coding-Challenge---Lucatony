@@ -17,8 +17,18 @@ INGESTION_LOG_PATH = DATA_DIR / "ingestion_log.parquet"
 PAGE_SIZE = 1000
 REQUIRED_FIELDS = ["period", "capacity", "outage", "percentOutage"]
 
+def get_latest_period() -> str | None:
+    if not FACT_OUTAGES_PATH.exists():
+        return None
+    df = pd.read_parquet(FACT_OUTAGES_PATH)
 
-def fetch_all_rows(page_size: int = PAGE_SIZE) -> list[dict[str, Any]]:
+    if df.empty:
+        return None
+    
+    return df["period"].max()
+
+
+def fetch_all_rows(page_size: int = PAGE_SIZE, start_date: str | None = None) -> list[dict[str, Any]]:
     client = EIAClient()
     all_rows: list[dict[str, Any]] = []
     offset = 0
@@ -33,7 +43,7 @@ def fetch_all_rows(page_size: int = PAGE_SIZE) -> list[dict[str, Any]]:
         else:
             length = page_size
 
-        result = client.fetch_page(offset=offset, length=length)
+        result = client.fetch_page(offset=offset, length=length, start_date=start_date)
         rows = result["rows"]
 
         if not rows:
@@ -111,16 +121,30 @@ def append_ingestion_log(row_count: int) -> str:
 
 
 def run_ingestion() -> dict[str, Any]:
-    raw_rows = fetch_all_rows()
+    latest_period = get_latest_period()
+    raw_rows = fetch_all_rows(start_date=latest_period)
     rows = clean_rows(raw_rows)
 
     if not rows:
-        raise RuntimeError("No valid outage rows were collected during ingestion")
-
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+        run_id = append_ingestion_log(0)
+        return {
+            "run_id": run_id,
+            "row_count": 0,
+            "fact_outages": str(FACT_OUTAGES_PATH),
+            "dim_date": str(DIM_DATE_PATH),
+            "ingestion_log": str(INGESTION_LOG_PATH),
+        }
 
     fact_df = build_fact_outages(rows)
     dim_date_df = build_dim_date(fact_df)
+
+    if FACT_OUTAGES_PATH.exists():
+        existing = pd.read_parquet(FACT_OUTAGES_PATH)
+        fact_df = pd.concat([existing, fact_df]).drop_duplicates(subset="period")
+
+    if DIM_DATE_PATH.exists():
+        existing = pd.read_parquet(DIM_DATE_PATH)
+        dim_date_df = pd.concat([existing, dim_date_df]).drop_duplicates(subset="period")
 
     fact_df.to_parquet(FACT_OUTAGES_PATH, index=False)
     dim_date_df.to_parquet(DIM_DATE_PATH, index=False)

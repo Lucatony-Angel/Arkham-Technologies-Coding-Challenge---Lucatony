@@ -16,7 +16,7 @@ class EIAClient:
         self.endpoint = "/nuclear-outages/us-nuclear-outages/data/"
         self.timeout = 30
 
-    def fetch_page(self, offset = 0, length = 1000) -> dict[str, Any]:
+    def fetch_page(self, offset = 0, length = 1000, start_date: str | None = None) -> dict[str, Any]:
         url = f"{self.base_url}{self.endpoint}"
 
         params = [
@@ -30,6 +30,9 @@ class EIAClient:
             ("offset", offset),
             ("length", length),
         ]
+
+        if start_date:
+            params.append(("filter[period][gte]", start_date))
 
         try:
             response = requests.get(url, params = params, timeout = self.timeout)
