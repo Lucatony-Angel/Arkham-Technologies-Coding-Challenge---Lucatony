@@ -12,6 +12,12 @@ export async function fetchOutages({ limit = 100, offset = 0, date_from, date_to
 export async function triggerRefresh() {
   const res = await fetch("/refresh", { method: "POST" });
   if (!res.ok) throw new Error(`Refresh failed: ${res.status}`);
-  
+
+  return res.json();
+}
+
+export async function fetchAnalytics() {
+  const res = await fetch("/analytics");
+  if (!res.ok) throw new Error(`Failed to fetch analytics: ${res.status}`);
   return res.json();
 }

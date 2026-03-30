@@ -7,6 +7,7 @@ export default defineConfig({
     proxy: {
       "/data": "http://127.0.0.1:8000",
       "/refresh": "http://127.0.0.1:8000",
+      "/analytics": "http://127.0.0.1:8000",
     },
   },
 });

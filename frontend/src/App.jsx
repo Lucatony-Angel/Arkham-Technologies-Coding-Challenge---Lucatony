@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchOutages, triggerRefresh } from "./services/api";
+import { fetchOutages, fetchAnalytics, triggerRefresh } from "./services/api";
 
 const PAGE_SIZE = 100;
 const COLUMNS = ["period", "capacity_mw", "outage_mw", "percent_outage"];
@@ -15,6 +15,7 @@ export default function App() {
   const [sortCol, setSortCol] = useState("period");
   const [sortAsc, setSortAsc] = useState(false);
   const [refreshMsg, setRefreshMsg] = useState(null);
+  const [analytics, setAnalytics] = useState([]);
 
   async function load(newOffset = 0) {
     setLoading(true);
@@ -36,7 +37,16 @@ export default function App() {
     }
   }
 
-  useEffect(() => { load(0); }, [dateFrom, dateTo]);
+  async function loadAnalytics() {
+    try {
+      const result = await fetchAnalytics();
+      setAnalytics(result.data);
+    } catch (e) {
+      // analytics failure is non-critical, don't block the main view
+    }
+  }
+
+  useEffect(() => { load(0); loadAnalytics(); }, [dateFrom, dateTo]);
 
   async function handleRefresh() {
     setLoading(true);
@@ -46,6 +56,7 @@ export default function App() {
       const result = await triggerRefresh();
       setRefreshMsg(`Refreshed — ${result.row_count} rows ingested.`);
       await load(0);
+      await loadAnalytics();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -130,6 +141,34 @@ export default function App() {
               Next
             </button>
           </div>
+        </>
+      )}
+
+      {analytics.length > 0 && (
+        <>
+          <h2>Monthly Analytics</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Month</th>
+                <th>Avg Outage %</th>
+                <th>Avg Outage MW</th>
+                <th>Avg Capacity MW</th>
+              </tr>
+            </thead>
+            <tbody>
+              {analytics.map((row) => (
+                <tr key={`${row.year}-${row.month}`}>
+                  <td>{row.year}</td>
+                  <td>{row.month}</td>
+                  <td>{row.avg_outage_pct.toFixed(2)}%</td>
+                  <td>{row.avg_outage_mw.toLocaleString(undefined, { maximumFractionDigits: 1 })}</td>
+                  <td>{row.avg_capacity_mw.toLocaleString(undefined, { maximumFractionDigits: 1 })}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
       )}
     </div>
