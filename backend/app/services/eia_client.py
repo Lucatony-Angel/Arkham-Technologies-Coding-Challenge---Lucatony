@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 import os
 import time
 from typing import Any
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 2
 RETRY_DELAY = 2  # seconds between retries
@@ -45,11 +48,13 @@ class EIAClient:
                 break  # success, exit retry loop
             except requests.exceptions.Timeout:
                 if attempt < MAX_RETRIES - 1:
+                    logger.warning("Request timed out, retrying (attempt %d/%d)", attempt + 1, MAX_RETRIES)
                     time.sleep(RETRY_DELAY)
                     continue
                 raise RuntimeError("Request to EIA API timed out after retries")
             except requests.exceptions.ConnectionError:
                 if attempt < MAX_RETRIES - 1:
+                    logger.warning("Connection error, retrying (attempt %d/%d)", attempt + 1, MAX_RETRIES)
                     time.sleep(RETRY_DELAY)
                     continue
                 raise RuntimeError("Could not connect to EIA API after retries")

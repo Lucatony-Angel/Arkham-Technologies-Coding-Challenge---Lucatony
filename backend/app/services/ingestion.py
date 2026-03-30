@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 from backend.app.services.eia_client import EIAClient
 
@@ -80,6 +83,10 @@ def clean_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
         cleaned_rows.append(cleaned_row)
 
+    skipped = len(rows) - len(cleaned_rows)
+    if skipped:
+        logger.warning("Skipped %d rows due to missing or invalid fields", skipped)
+
     return cleaned_rows
 
 
@@ -122,10 +129,13 @@ def append_ingestion_log(row_count: int) -> str:
 
 def run_ingestion() -> dict[str, Any]:
     latest_period = get_latest_period()
+    logger.info("Starting ingestion, latest stored period: %s", latest_period)
     raw_rows = fetch_all_rows(start_date=latest_period)
+    logger.info("Fetched %d raw rows from EIA API", len(raw_rows))
     rows = clean_rows(raw_rows)
 
     if not rows:
+        logger.info("No new rows to ingest, data is already up to date")
         run_id = append_ingestion_log(0)
         return {
             "run_id": run_id,
@@ -149,6 +159,7 @@ def run_ingestion() -> dict[str, Any]:
     fact_df.to_parquet(FACT_OUTAGES_PATH, index=False)
     dim_date_df.to_parquet(DIM_DATE_PATH, index=False)
     run_id = append_ingestion_log(len(rows))
+    logger.info("Ingestion complete — %d rows written, run_id=%s", len(rows), run_id)
 
     return {
         "run_id": run_id,
