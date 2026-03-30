@@ -51,6 +51,10 @@ def test_data_empty_when_no_parquet():
         assert response.status_code == 200
         assert response.json()["data"] == []
 
+def test_data_invalid_date_returns_422():
+    response = client.get("/data?date_from=bad-date")
+    assert response.status_code == 422
+
 
 # --- POST /refresh ---
 

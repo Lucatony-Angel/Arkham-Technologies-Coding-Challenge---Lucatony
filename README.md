@@ -82,7 +82,8 @@ Returns filtered and paginated nuclear outage records.
       "percent_outage": 3.14
     }
   ],
-  "count": 100,
+  "count": 1,
+  "total": 842,
   "offset": 0
 }
 ```
@@ -127,9 +128,17 @@ pytest tests/
 
 ---
 
+## Design Decisions
+
+- **Parquet over CSV or SQLite** — Parquet is columnar and compressed, making it efficient for the kind of time-series filtering this API does (filter by date range, read only needed columns). It's also the format specified by the challenge.
+- **Pandas over PySpark** — the dataset is small enough that pandas is the right tool. PySpark adds infrastructure complexity with no benefit at this scale.
+- **Flat file storage over a database** — keeps the project self-contained with no external dependencies to set up. The `/refresh` endpoint writes to local Parquet files which the API reads directly.
+
+---
+
 ## Assumptions
 
 - Data is sourced at the US national level (not per plant) as provided by the EIA nuclear outages endpoint
 - `period` is treated as the primary key — one record per day
-- Incremental ingestion uses the most recent stored period as the start date filter, with `drop_duplicates` as a safeguard against overlap
+- Incremental ingestion fetches from the day after the latest stored period (`latest_period + 1 day`), so each run only pulls genuinely new data with no overlap
 - The frontend is intended for local use only and proxies API requests through Vite to avoid CORS issues in development

@@ -16,7 +16,7 @@ def test_limit():
          patch("pandas.read_parquet", mock_read_parquet):
         mock_path.exists.return_value = True
         result = get_outages(limit=2, offset=0)
-        assert len(result) == 2
+        assert len(result["rows"]) == 2
 
 def test_offset():
     with patch("backend.app.repository.FACT_OUTAGES_PATH") as mock_path, \

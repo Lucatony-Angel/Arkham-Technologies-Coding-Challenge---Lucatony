@@ -1,7 +1,7 @@
-1. Professor Michael Shah
+1. Professor Lin Zhong
 Introduction to Systems Programming and Computer Organization
 Yale University
-Email: Michael.shah@yale.edu
+Email: lin.zhong@yale.edu
 Relationship: Professor for Fall 2025 systems programming course
 Can speak to: technical work, problem-solving, persistence, and coursework performance
 
