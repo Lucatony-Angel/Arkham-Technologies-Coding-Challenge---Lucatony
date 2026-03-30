@@ -1,5 +1,4 @@
 import pandas as pd
-import pytest
 from unittest.mock import patch
 from backend.app.repository import get_outages
 

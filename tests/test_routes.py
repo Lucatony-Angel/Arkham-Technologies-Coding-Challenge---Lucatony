@@ -55,7 +55,7 @@ def test_data_empty_when_no_parquet():
 # --- POST /refresh ---
 
 def test_refresh_returns_500_without_api_key():
-    with patch.dict("os.environ", {}, clear=True):
+    with patch("backend.app.core.config.settings.eia_api_key", None):
         response = client.post("/refresh")
         assert response.status_code == 500
 

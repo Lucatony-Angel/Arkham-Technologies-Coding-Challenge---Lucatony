@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import logging
-import os
 import time
 from typing import Any
 
 import requests
+
+from backend.app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +16,7 @@ RETRY_DELAY = 2  # seconds between retries
 
 class EIAClient:
     def __init__(self):
-        self.api_key = os.getenv("EIA_API_KEY")
-
+        self.api_key = settings.eia_api_key
         if self.api_key is None:
             raise ValueError("Missing EIA_API_KEY environment variable")
 

@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
-logger = logging.getLogger(__name__)
-
 from backend.app.services.eia_client import EIAClient
+
+logger = logging.getLogger(__name__)
 
 DATA_DIR = Path("data/processed")
 FACT_OUTAGES_PATH = DATA_DIR / "fact_outages.parquet"
@@ -130,7 +130,13 @@ def append_ingestion_log(row_count: int) -> str:
 def run_ingestion() -> dict[str, Any]:
     latest_period = get_latest_period()
     logger.info("Starting ingestion, latest stored period: %s", latest_period)
-    raw_rows = fetch_all_rows(start_date=latest_period)
+
+    if latest_period:
+        start_date = (date.fromisoformat(latest_period) + timedelta(days=1)).isoformat()
+    else:
+        start_date = None
+
+    raw_rows = fetch_all_rows(start_date=start_date)
     logger.info("Fetched %d raw rows from EIA API", len(raw_rows))
     rows = clean_rows(raw_rows)
 
