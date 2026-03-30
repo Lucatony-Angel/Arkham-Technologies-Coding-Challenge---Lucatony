@@ -1,6 +1,6 @@
 from datetime import date
 from fastapi import APIRouter, HTTPException, Query
-from backend.app.repository import get_outages
+from backend.app.repository import get_outages, get_monthly_analytics
 from backend.app.services.ingestion import run_ingestion
 
 router = APIRouter()
@@ -19,6 +19,11 @@ def data(
         date_to=date_to.isoformat() if date_to else None,
     )
     return {"data": result["rows"], "count": len(result["rows"]), "total": result["total"], "offset": offset}
+
+@router.get("/analytics")
+def analytics():
+    return {"data": get_monthly_analytics()}
+
 
 @router.post("/refresh")
 def refresh():

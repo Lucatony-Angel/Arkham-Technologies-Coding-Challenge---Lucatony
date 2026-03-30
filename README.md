@@ -88,6 +88,28 @@ Returns filtered and paginated nuclear outage records.
 }
 ```
 
+### `GET /analytics`
+
+Returns average monthly outage metrics grouped by year and month.
+
+**Example response:**
+
+```json
+{
+  "data": [
+    {
+      "year": 2026,
+      "month": 3,
+      "avg_outage_pct": 3.14,
+      "avg_outage_mw": 3140.9,
+      "avg_capacity_mw": 100032.4
+    }
+  ]
+}
+```
+
+---
+
 ### `POST /refresh`
 
 Triggers incremental data ingestion from the EIA API. Only fetches records newer than what is already stored.
