@@ -26,7 +26,7 @@ Get a free API key at https://www.eia.gov/opendata/
 ### 3. Install backend dependencies
 
 ```bash
-pip install -r backend/requrements.txt
+pip install -r backend/requirements.txt
 ```
 
 ### 4. Run the ingestion script

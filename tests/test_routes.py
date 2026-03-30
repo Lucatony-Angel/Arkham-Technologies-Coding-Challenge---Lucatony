@@ -54,10 +54,10 @@ def test_data_empty_when_no_parquet():
 
 # --- POST /refresh ---
 
-def test_refresh_returns_500_without_api_key():
+def test_refresh_returns_400_without_api_key():
     with patch("backend.app.core.config.settings.eia_api_key", None):
         response = client.post("/refresh")
-        assert response.status_code == 500
+        assert response.status_code == 400
 
 def test_refresh_returns_result_on_success():
     mock_result = {
